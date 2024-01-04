@@ -1,4 +1,4 @@
-use std::{fs, collections::HashSet};
+use std::fs;
 use rand::{thread_rng, Rng};
 use std::io::stdin;
 
@@ -8,7 +8,8 @@ fn main() {
     let word_length = word.len();
     let mut hits: u32 = 0;
     let mut word_frequency_array = build_word_frequency_array(&word);
-    println!("THE WORD IS {word}");
+
+    clear_screen(word, &word_frequency_array);
 
     loop {
         if hits == word_length as u32 {
@@ -19,8 +20,11 @@ fn main() {
         println!("Guess a letter:");
 
         let guess = match read_in_alphabetic_character() {
-            Ok(v) => v,
+            Ok(v) => {
+                v
+            },
             Err(_) => {
+                clear_screen(word, &word_frequency_array);
                 println!("That's not a letter!");
                 continue;
             }
@@ -28,13 +32,27 @@ fn main() {
 
         let index = convert_char_to_index(guess);
         if word_frequency_array[index] >= 1 {
-            println!("That's a character in the word!");
             hits += word_frequency_array[index] as u32;
             word_frequency_array[index] = 0;
+            clear_screen(word, &word_frequency_array);  
+            println!("That's a character in the word!");
         } else {
+            clear_screen(word, &word_frequency_array);  
             println!("Miss!");
         }
     }
+}
+
+fn clear_screen(word: &String, word_frequency_array: &Vec<u32>) {
+    print!("\x1B[2J\x1B[1;1H");
+    for char in word.chars() {
+        if word_frequency_array[convert_char_to_index(char)] == 0 {
+            print!("{char}");
+        } else {
+            print!("_");
+        }
+    }
+    print!("\n");
 }
 
 fn build_word_frequency_array(word: &String) -> Vec<u32> {
@@ -71,14 +89,6 @@ fn read_in_alphabetic_character() -> Result<char, &'static str> {
         true => return Ok(char),
         false => return Err("Input was not alphabetic")
     }
-}
-
-fn build_word_hashset(word: &String) -> HashSet<char> {
-    let mut hashset: HashSet<char> = HashSet::new();
-    for char in word.chars() {
-        hashset.insert(char);
-    }
-    return hashset;
 }
 
 fn get_random_word(words: &Vec<String>) -> &String {
