@@ -1,6 +1,9 @@
 use std::fs;
 use rand::{thread_rng, Rng};
 use std::io::stdin;
+use colored::Colorize;
+
+const MISSES_ALLOWED: u32 = 10;
 
 fn main() {
     loop {
@@ -11,30 +14,27 @@ fn main() {
         let mut hits: u32 = 0;
         let mut misses: u32 = 0;
         let mut used: Vec<char> = vec![];
-        const MISSES_ALLOWED: u32 = 6;
 
         let mut word_frequency_array: Vec<i32> = build_word_frequency_array(&word);
-        clear_screen_during_game(word, &word_frequency_array, &used);
+        clear_screen_during_game(word, &word_frequency_array, &used, &misses);
 
         loop {
             if hits == word_length as u32 {
-                end_game("🎉 You did it! 🎉", &word);
+                end_game("🎉 You did it! 🎉", &word, "Success");
                 break;
             }
             else if misses >= MISSES_ALLOWED {
-                end_game("💥 YOU LOST 💥", &word);
+                end_game("💥 YOU LOST 💥", &word, "Failure");
                 break;
             }
-
-            println!("Guess a letter:");
 
             let guess = match read_in_alphabetic_character() {
                 Ok(v) => {
                     v
                 },
                 Err(_) => {
-                    clear_screen_during_game(word, &word_frequency_array, &used);
-                    println!("That's not a lowercase letter!");
+                    clear_screen_during_game(word, &word_frequency_array, &used, &misses);
+                    println!("{}", "You can only use lowercase letters!".red());
                     continue;
                 }
             };
@@ -43,23 +43,23 @@ fn main() {
             if word_frequency_array[index] >= 1 {
                 hits += word_frequency_array[index] as u32;
                 word_frequency_array[index] = -1;
-                clear_screen_during_game(word, &word_frequency_array, &used);  
-                println!("That's a character in the word!");
+                clear_screen_during_game(word, &word_frequency_array, &used, &misses);  
+                println!("{}", "Hit!".green().bold());
             } else {
                 if word_frequency_array[index] == 0 {
                     misses += 1;
                     word_frequency_array[index] = -1;
                     used.push(guess);
-                    clear_screen_during_game(word, &word_frequency_array, &used); 
-                    println!("Miss!");
+                    clear_screen_during_game(word, &word_frequency_array, &used, &misses); 
+                    println!("{}", "Miss!".red());
                 } else {
-                    clear_screen_during_game(word, &word_frequency_array, &used); 
-                    println!("You already used that letter!");
+                    clear_screen_during_game(word, &word_frequency_array, &used, &misses); 
+                    println!("{}", "You already used that letter...".italic().yellow());
                 }
             }
         }
 
-        println!("Type r to play again");
+        println!("{} {} {}", "Type".dimmed(), "r".blink().green(), "to play again".dimmed());
         match read_in_alphabetic_character() {
             Ok(v) => {
                 if v == 'r' {
@@ -75,28 +75,45 @@ fn main() {
     }
 }
 
-fn end_game(message: &str, word: &String) {
+fn end_game(message: &str, word: &String, state: &str) {
     clear_screen();
-    println!("{message}");
-    println!("The word was {word}");
+    if state == "Success" {
+        println!("{}", message.green());
+    } else {
+        println!("{}", message.red());
+    }
+    println!("{} {}", "The word was...".dimmed(), format!("{word}").italic().dimmed());
 }
 
 fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>, used: &Vec<char>) {
+fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>, used: &Vec<char>, misses: &u32) {
     clear_screen();
+
+    let mut heart_count: u32 = MISSES_ALLOWED;
+    let hearts_remaining: u32 = MISSES_ALLOWED - misses;
+    while heart_count > 0 {
+        if heart_count <= hearts_remaining {
+            print!("❤️");
+        } else {
+            print!("💀");
+        }
+        heart_count -= 1;
+    }
+
+    print!("\n ");
     for char in word.chars() {
         if word_frequency_array[convert_char_to_index(char)] <= 0 {
-            print!("{char}");
+            print!("{char} ");
         } else {
-            print!("_");
+            print!("_ ");
         }
     }
-    print!("\n");
+    print!("\n\n");
     
-    print!("Not present: ");
+    print!("{} ", "Used:".dimmed());
     for char in used {
         print!("{char} ");
     }
