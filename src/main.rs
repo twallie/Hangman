@@ -4,6 +4,7 @@ use std::io::stdin;
 use colored::Colorize;
 
 const MISSES_ALLOWED: u32 = 10;
+const FILEPATH: &str = "/home/tom/sideprojects/rust/hangman/resources/words.txt";
 
 fn main() {
     loop {
@@ -59,12 +60,13 @@ fn main() {
             }
         }
 
-        println!("{} {} {}", "Type".dimmed(), "r".blink().green(), "to play again".dimmed());
+        println!("{} {} {}", "Type".dimmed(), "r".blink().green(), "to play again, anything else to quit...".dimmed());
         match read_in_alphabetic_character() {
             Ok(v) => {
                 if v == 'r' {
                     continue;
                 } else {
+                    clear_screen();
                     return;
                 }
             },
@@ -163,7 +165,6 @@ fn get_random_word(words: &Vec<String>) -> &String {
 }
 
 fn read_words() -> Vec<String> {
-    const FILEPATH: &str = "resources/words.txt";
     let words: Vec<String> = fs::read_to_string(FILEPATH)
         .expect("Couldn't read the file")
         .lines()
