@@ -9,9 +9,10 @@ fn main() {
     
     let mut hits: u32 = 0;
     let mut misses: u32 = 0;
+    let mut used: Vec<char> = vec![];
     const MISSES_ALLOWED: u32 = 6;
 
-    let mut word_frequency_array = build_word_frequency_array(&word);
+    let mut word_frequency_array: Vec<i32> = build_word_frequency_array(&word);
     clear_screen_during_game(word, &word_frequency_array);
 
     loop {
@@ -40,13 +41,19 @@ fn main() {
         let index = convert_char_to_index(guess);
         if word_frequency_array[index] >= 1 {
             hits += word_frequency_array[index] as u32;
-            word_frequency_array[index] = 0;
+            word_frequency_array[index] = -1;
             clear_screen_during_game(word, &word_frequency_array);  
             println!("That's a character in the word!");
         } else {
-            clear_screen_during_game(word, &word_frequency_array);  
-            println!("Miss!");
-            misses += 1;
+            clear_screen_during_game(word, &word_frequency_array); 
+            if word_frequency_array[index] == 0 {
+                println!("Miss!");
+                misses += 1;
+                word_frequency_array[index] = -1;
+                used.push(guess);
+            } else {
+                println!("You already used that letter!");
+            }
         }
     }
 }
@@ -61,10 +68,10 @@ fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<u32>) {
+fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>) {
     clear_screen();
     for char in word.chars() {
-        if word_frequency_array[convert_char_to_index(char)] == 0 {
+        if word_frequency_array[convert_char_to_index(char)] <= 0 {
             print!("{char}");
         } else {
             print!("_");
@@ -73,8 +80,8 @@ fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<u32>) {
     print!("\n");
 }
 
-fn build_word_frequency_array(word: &String) -> Vec<u32> {
-    let mut word_frequency_array: Vec<u32> = vec![0; 26];
+fn build_word_frequency_array(word: &String) -> Vec<i32> {
+    let mut word_frequency_array: Vec<i32> = vec![0; 26];
 
     for char in word.chars() {
         let ascii = convert_char_to_index(char);
