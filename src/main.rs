@@ -4,7 +4,7 @@ use std::io::stdin;
 use colored::Colorize;
 
 const MISSES_ALLOWED: u32 = 10;
-const FILEPATH: &str = "/home/tom/sideprojects/rust/hangman/resources/words.txt";
+const FILEPATH: &str = "/home/tom/.homebrewed/hangman/resources/words.txt";
 
 fn main() {
     loop {
