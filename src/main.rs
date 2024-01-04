@@ -6,18 +6,24 @@ fn main() {
     let words = read_words();
     let word = get_random_word(&words);
     let word_length = word.len();
+    
     let mut hits: u32 = 0;
-    let mut word_frequency_array = build_word_frequency_array(&word);
+    let mut misses: u32 = 0;
+    const MISSES_ALLOWED: u32 = 6;
 
+    let mut word_frequency_array = build_word_frequency_array(&word);
     clear_screen_during_game(word, &word_frequency_array);
 
     loop {
         if hits == word_length as u32 {
-            clear_screen();
-            println!("🎉 You did it! 🎉");
-            println!("The word was {word}");
+            end_game("🎉 You did it! 🎉", &word);
             return;
         }
+        else if misses >= MISSES_ALLOWED {
+            end_game("💥 YOU LOST 💥", &word);
+            return;
+        }
+
         println!("Guess a letter:");
 
         let guess = match read_in_alphabetic_character() {
@@ -40,8 +46,15 @@ fn main() {
         } else {
             clear_screen_during_game(word, &word_frequency_array);  
             println!("Miss!");
+            misses += 1;
         }
     }
+}
+
+fn end_game(message: &str, word: &String) {
+    clear_screen();
+    println!("{message}");
+    println!("The word was {word}");
 }
 
 fn clear_screen() {
