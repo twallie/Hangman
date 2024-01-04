@@ -9,11 +9,12 @@ fn main() {
     let mut hits: u32 = 0;
     let mut word_frequency_array = build_word_frequency_array(&word);
 
-    clear_screen(word, &word_frequency_array);
+    clear_screen_during_game(word, &word_frequency_array);
 
     loop {
         if hits == word_length as u32 {
-            println!("You did it!");
+            clear_screen();
+            println!("🎉 You did it! 🎉");
             println!("The word was {word}");
             return;
         }
@@ -24,8 +25,8 @@ fn main() {
                 v
             },
             Err(_) => {
-                clear_screen(word, &word_frequency_array);
-                println!("That's not a letter!");
+                clear_screen_during_game(word, &word_frequency_array);
+                println!("That's not a lowercase letter!");
                 continue;
             }
         };
@@ -34,17 +35,21 @@ fn main() {
         if word_frequency_array[index] >= 1 {
             hits += word_frequency_array[index] as u32;
             word_frequency_array[index] = 0;
-            clear_screen(word, &word_frequency_array);  
+            clear_screen_during_game(word, &word_frequency_array);  
             println!("That's a character in the word!");
         } else {
-            clear_screen(word, &word_frequency_array);  
+            clear_screen_during_game(word, &word_frequency_array);  
             println!("Miss!");
         }
     }
 }
 
-fn clear_screen(word: &String, word_frequency_array: &Vec<u32>) {
+fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
+}
+
+fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<u32>) {
+    clear_screen();
     for char in word.chars() {
         if word_frequency_array[convert_char_to_index(char)] == 0 {
             print!("{char}");
@@ -85,9 +90,9 @@ fn read_in_alphabetic_character() -> Result<char, &'static str> {
         Err(_) => return Err("Error converting user input, likely not a char"),
     };
 
-    match char.is_alphabetic() {
-        true => return Ok(char),
-        false => return Err("Input was not alphabetic")
+    match char.is_alphabetic() && char.is_lowercase() {
+        true => Ok(char),
+        false => return Err("Input was a lowercase letter of the english alphabet")
     }
 }
 
