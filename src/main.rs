@@ -3,58 +3,75 @@ use rand::{thread_rng, Rng};
 use std::io::stdin;
 
 fn main() {
-    let words = read_words();
-    let word = get_random_word(&words);
-    let word_length = word.len();
-    
-    let mut hits: u32 = 0;
-    let mut misses: u32 = 0;
-    let mut used: Vec<char> = vec![];
-    const MISSES_ALLOWED: u32 = 6;
-
-    let mut word_frequency_array: Vec<i32> = build_word_frequency_array(&word);
-    clear_screen_during_game(word, &word_frequency_array);
-
     loop {
-        if hits == word_length as u32 {
-            end_game("🎉 You did it! 🎉", &word);
-            return;
-        }
-        else if misses >= MISSES_ALLOWED {
-            end_game("💥 YOU LOST 💥", &word);
-            return;
+        let words = read_words();
+        let word = get_random_word(&words);
+        let word_length = word.len();
+        
+        let mut hits: u32 = 0;
+        let mut misses: u32 = 0;
+        let mut used: Vec<char> = vec![];
+        const MISSES_ALLOWED: u32 = 6;
+
+        let mut word_frequency_array: Vec<i32> = build_word_frequency_array(&word);
+        clear_screen_during_game(word, &word_frequency_array, &used);
+
+        loop {
+            if hits == word_length as u32 {
+                end_game("🎉 You did it! 🎉", &word);
+                break;
+            }
+            else if misses >= MISSES_ALLOWED {
+                end_game("💥 YOU LOST 💥", &word);
+                break;
+            }
+
+            println!("Guess a letter:");
+
+            let guess = match read_in_alphabetic_character() {
+                Ok(v) => {
+                    v
+                },
+                Err(_) => {
+                    clear_screen_during_game(word, &word_frequency_array, &used);
+                    println!("That's not a lowercase letter!");
+                    continue;
+                }
+            };
+
+            let index = convert_char_to_index(guess);
+            if word_frequency_array[index] >= 1 {
+                hits += word_frequency_array[index] as u32;
+                word_frequency_array[index] = -1;
+                clear_screen_during_game(word, &word_frequency_array, &used);  
+                println!("That's a character in the word!");
+            } else {
+                if word_frequency_array[index] == 0 {
+                    misses += 1;
+                    word_frequency_array[index] = -1;
+                    used.push(guess);
+                    clear_screen_during_game(word, &word_frequency_array, &used); 
+                    println!("Miss!");
+                } else {
+                    clear_screen_during_game(word, &word_frequency_array, &used); 
+                    println!("You already used that letter!");
+                }
+            }
         }
 
-        println!("Guess a letter:");
-
-        let guess = match read_in_alphabetic_character() {
+        println!("Type r to play again");
+        match read_in_alphabetic_character() {
             Ok(v) => {
-                v
+                if v == 'r' {
+                    continue;
+                } else {
+                    return;
+                }
             },
             Err(_) => {
-                clear_screen_during_game(word, &word_frequency_array);
-                println!("That's not a lowercase letter!");
-                continue;
+                return;
             }
         };
-
-        let index = convert_char_to_index(guess);
-        if word_frequency_array[index] >= 1 {
-            hits += word_frequency_array[index] as u32;
-            word_frequency_array[index] = -1;
-            clear_screen_during_game(word, &word_frequency_array);  
-            println!("That's a character in the word!");
-        } else {
-            clear_screen_during_game(word, &word_frequency_array); 
-            if word_frequency_array[index] == 0 {
-                println!("Miss!");
-                misses += 1;
-                word_frequency_array[index] = -1;
-                used.push(guess);
-            } else {
-                println!("You already used that letter!");
-            }
-        }
     }
 }
 
@@ -68,7 +85,7 @@ fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>) {
+fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>, used: &Vec<char>) {
     clear_screen();
     for char in word.chars() {
         if word_frequency_array[convert_char_to_index(char)] <= 0 {
@@ -77,6 +94,13 @@ fn clear_screen_during_game(word: &String, word_frequency_array: &Vec<i32>) {
             print!("_");
         }
     }
+    print!("\n");
+    
+    print!("Not present: ");
+    for char in used {
+        print!("{char} ");
+    }
+
     print!("\n");
 }
 
