@@ -5,18 +5,51 @@ use std::io::stdin;
 fn main() {
     let words = read_words();
     let word = get_random_word(&words);
-    let hashset = build_word_hashset(word);
+    let word_length = word.len();
+    let mut hits: u32 = 0;
+    let mut word_frequency_array = build_word_frequency_array(&word);
+    println!("THE WORD IS {word}");
 
     loop {
+        if hits == word_length as u32 {
+            println!("You did it!");
+            println!("The word was {word}");
+            return;
+        }
         println!("Guess a letter:");
 
         let guess = match read_in_alphabetic_character() {
             Ok(v) => v,
-            Err(_) => continue
+            Err(_) => {
+                println!("That's not a letter!");
+                continue;
+            }
         };
 
-        println!("That do be what I am looking for fr fr");
+        let index = convert_char_to_index(guess);
+        if word_frequency_array[index] >= 1 {
+            println!("That's a character in the word!");
+            hits += word_frequency_array[index] as u32;
+            word_frequency_array[index] = 0;
+        } else {
+            println!("Miss!");
+        }
     }
+}
+
+fn build_word_frequency_array(word: &String) -> Vec<u32> {
+    let mut word_frequency_array: Vec<u32> = vec![0; 26];
+
+    for char in word.chars() {
+        let ascii = convert_char_to_index(char);
+        word_frequency_array[ascii] += 1;
+    }
+
+    word_frequency_array
+}
+
+fn convert_char_to_index(char: char) -> usize {
+    (char as usize) - ('a' as usize)
 }
 
 fn read_in_alphabetic_character() -> Result<char, &'static str> {
@@ -50,7 +83,7 @@ fn build_word_hashset(word: &String) -> HashSet<char> {
 
 fn get_random_word(words: &Vec<String>) -> &String {
     let random_index = thread_rng().gen_range(0..words.len());
-    return &words[random_index];
+    &words[random_index]
 }
 
 fn read_words() -> Vec<String> {
