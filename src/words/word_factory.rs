@@ -20,7 +20,6 @@ fn parse_data_into_vec(data: &str) -> Vec<String> {
     data.split("\n").map(|s| s.to_string().to_owned()).collect()
 }
 
-#[derive(Debug)]
 pub struct Word {
     string: String
 }
